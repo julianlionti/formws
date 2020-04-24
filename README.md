@@ -7,7 +7,8 @@
 ## Install
 
 ```bash
-npm install --save formws
+npm install formws
+yarn add formws
 ```
 
 ## Usage
