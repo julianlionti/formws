@@ -102,7 +102,7 @@ type Fetch = {
 
 export const useFetch = <T extends string>(key: T): Fetch & State => {
   const { current: hookId } = useRef(Math.random())
-  const lastFetch = useRef<any>({})
+  const lastFetch = useRef<any>()
   const { state, dispatch, headers, defaultParams = {} } = useContext(WsContext)
   const prevHeaders = usePrevious(headers)
   const actual = state[key]
@@ -139,6 +139,7 @@ export const useFetch = <T extends string>(key: T): Fetch & State => {
   useEffect(() => {
     if (
       prevHeaders &&
+      lastFetch.current &&
       JSON.stringify(headers) !== JSON.stringify(prevHeaders)
     ) {
       call(lastFetch.current)
