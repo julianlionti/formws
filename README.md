@@ -15,13 +15,39 @@ npm install --save formws
 ```tsx
 import React, { Component } from 'react'
 
-import MyComponent from 'formws'
-import 'formws/dist/index.css'
+import { WsProvider } from 'formws'
 
-class Example extends Component {
-  render() {
-    return <MyComponent />
-  }
+const App = () => {
+  return (
+    <WsProvider
+      urls={{
+        ejemplo: 'www.ejemplo.com',
+        ejemplo1: 'www.ejemplo1.com'
+      }}
+    >
+      <RestApp />
+    </WsProvider>
+  )
+}
+```
+
+```tsx
+import React, { Component } from 'react'
+
+import { WsProvider, useFecth } from 'formws'
+
+const InsideComponente = () => {
+  const { data, isLoading, error, llamar } = useFetch('ejemplo')
+
+  useEffect(() => {
+    llamar({ methor: 'GET', query: {} })
+  }, [])
+
+  return (
+    <>
+      <Components />
+    </>
+  )
 }
 ```
 
