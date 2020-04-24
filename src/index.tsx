@@ -15,7 +15,7 @@ interface WSProps {
   urls: {
     [url: string]: string
   }
-  config?: {}
+  headers?: {}
   defaultParams?: {}
 }
 
@@ -40,7 +40,7 @@ type Action = {
 interface ContextState {
   dispatch: React.Dispatch<Action>
   state: InitialState
-  config?: {}
+  headers?: {}
   defaultParams?: {}
 }
 
@@ -73,7 +73,7 @@ const reducer = (state: InitialState, action: Action): InitialState => {
 export const WSProvider = ({
   children,
   urls,
-  config,
+  headers,
   defaultParams
 }: WSProps) => {
   const initialState: InitialState = Object.keys(urls).reduce(
@@ -83,7 +83,7 @@ export const WSProvider = ({
 
   const [state, dispatch] = useReducer(reducer, initialState)
   return (
-    <WsContext.Provider value={{ state, dispatch, config, defaultParams }}>
+    <WsContext.Provider value={{ state, dispatch, headers, defaultParams }}>
       {children}
     </WsContext.Provider>
   )
@@ -103,8 +103,8 @@ type Fetch = {
 export const useFetch = <T extends string>(key: T): Fetch & State => {
   const { current: hookId } = useRef(Math.random())
   const lastFetch = useRef<any>({})
-  const { state, dispatch, config, defaultParams = {} } = useContext(WsContext)
-  const prevConfig = usePrevious(config)
+  const { state, dispatch, headers, defaultParams = {} } = useContext(WsContext)
+  const prevHeaders = usePrevious(headers)
   const actual = state[key]
 
   const call = useCallback(async (props: FetchProps) => {
@@ -117,7 +117,7 @@ export const useFetch = <T extends string>(key: T): Fetch & State => {
         url: actual.url,
         params: method === 'GET' ? { ...defaultParams, ...query } : undefined,
         data: method === 'POST' ? { ...defaultParams, ...query } : undefined,
-        headers: config
+        headers
       })
 
       if (status >= 200 && status < 300) {
@@ -137,10 +137,13 @@ export const useFetch = <T extends string>(key: T): Fetch & State => {
   }, [])
 
   useEffect(() => {
-    if (prevConfig && JSON.stringify(config) !== JSON.stringify(prevConfig)) {
+    if (
+      prevHeaders &&
+      JSON.stringify(headers) !== JSON.stringify(prevHeaders)
+    ) {
       call(lastFetch.current)
     }
-  }, [config])
+  }, [headers])
 
   return {
     ...actual,
