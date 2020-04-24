@@ -1,15 +1,6 @@
 import * as React from 'react'
 import axios from 'axios'
 
-interface Props {
-  text: string
-  toggle: () => void
-}
-
-export const ExampleComponent = ({ text }: Props) => {
-  return <p>{text}</p>
-}
-
 interface WSProps {
   children: React.Component
   intial?: any

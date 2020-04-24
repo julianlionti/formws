@@ -1,16 +1,16 @@
 import React from 'react'
 
-import { ExampleComponent, WSProvider } from 'formws'
+import { WSProvider } from 'formws'
 import 'formws/dist/index.css'
 import PrincipalJS from './PrincipalJS'
 import PrincipalTS from './PrincipalTS.tsx'
 
-const url = 'https://stage.fidus.com.ar/api'
+const url = 'https://www.prueba.com/api'
 
 export const urls = {
-  map: `${url}/v1/branch_offices`,
-  local: `${url}/v1/clients_branch_offices/store_detail/1`,
-  rewards: `${url}/v2/categories`
+  map: `${url}/v1/prueba`,
+  local: `${url}/v1/prueba2`,
+  rewards: `${url}/v1/prueba3`
 }
 
 const App = () => {

@@ -1,6 +1,6 @@
 {
   "name": "formws-example",
-  "homepage": "https://git.racaps.com/formws",
+  "homepage": "https://github.com/julianlionti/formws",
   "version": "0.0.0",
   "private": true,
   "dependencies": {
