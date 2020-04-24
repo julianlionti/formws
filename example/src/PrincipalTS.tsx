@@ -1,27 +1,29 @@
 import React, { useEffect, useState } from 'react'
 import { useFetch } from 'formws'
-import { urls } from './App'
 import Otro from './Otro'
+import urls from './urls'
 
 type Keys = keyof typeof urls
 
 export default () => {
-  const { llamar, error, isLoading, data } = useFetch<Keys>('map')
+  const { call, error, isLoading, data } = useFetch<Keys>('map')
   const [prueba, setPrueba] = useState(false)
 
   useEffect(() => {
     if (data === undefined) {
-      llamar({})
+      call({ transformData: (data) => data.filter(({ id }: any) => id === 83) })
       setTimeout(() => {
         setPrueba(true)
       }, 3000)
     }
-  }, [data, llamar])
+  }, [call, data])
 
   return (
     <div>
       <p>Vamos Racing: TypeScript</p>
-      {prueba && <Otro />}
+      <button onClick={() => setPrueba(!prueba)}>Mostrar/Ocultas</button>
+      {isLoading && <p>Cargando</p>}
+      {prueba && !isLoading && <Otro />}
     </div>
   )
 }

@@ -1,24 +1,32 @@
-import React from 'react'
+import React, { useState } from 'react'
 
 import { WSProvider } from 'formws'
 import 'formws/dist/index.css'
 import PrincipalJS from './PrincipalJS'
 import PrincipalTS from './PrincipalTS.tsx'
-
-const url = 'https://www.prueba.com/api'
-
-export const urls = {
-  map: `${url}/v1/prueba`,
-  local: `${url}/v1/prueba2`,
-  rewards: `${url}/v1/prueba3`
-}
+import urls from './urls'
 
 const App = () => {
+  const [config, setConfig] = useState({
+    'Content-Type': 'application/json',
+    Accept: 'application/json'
+  })
+  
   return (
-    <WSProvider urls={urls}>
+    <WSProvider config={config} urls={urls}>
       <div>
         <PrincipalJS />
         <PrincipalTS />
+        <button
+          onClick={() => {
+            setConfig((conf) => ({
+              ...conf,
+              Authorization: `Bearer ${'eyJhbGciOiJIUzI1NiJ9.eyJjbGllbnRfaWQiOjgwLCJkZXZpY2VfaWQiOm51bGx9.U2YI9omBcE_Gx9BgIIJe9MSfKYodKCyVLfU87K6C_aQ'}`
+            }))
+          }}
+        >
+          Cambair estado
+        </button>
       </div>
     </WSProvider>
   )

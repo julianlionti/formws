@@ -1,5 +1,13 @@
-import * as React from 'react'
+import React, {
+  useReducer,
+  useRef,
+  useContext,
+  useCallback,
+  createContext,
+  useEffect
+} from 'react'
 import axios from 'axios'
+import usePrevious from './usePrevious'
 
 interface WSProps {
   children: React.Component
@@ -7,6 +15,8 @@ interface WSProps {
   urls: {
     [url: string]: string
   }
+  config?: {}
+  defaultParams?: {}
 }
 
 type State = {
@@ -30,9 +40,11 @@ type Action = {
 interface ContextState {
   dispatch: React.Dispatch<Action>
   state: InitialState
+  config?: {}
+  defaultParams?: {}
 }
 
-const WsContext = React.createContext<ContextState>({
+const WsContext = createContext<ContextState>({
   dispatch: () => {},
   state: {}
 })
@@ -58,15 +70,20 @@ const reducer = (state: InitialState, action: Action): InitialState => {
   }
 }
 
-export const WSProvider = ({ children, urls }: WSProps) => {
+export const WSProvider = ({
+  children,
+  urls,
+  config,
+  defaultParams
+}: WSProps) => {
   const initialState: InitialState = Object.keys(urls).reduce(
     (acc, it) => ({ ...acc, [it]: { ...defValues, url: urls[it] } }),
     {}
   )
 
-  const [state, dispatch] = React.useReducer(reducer, initialState)
+  const [state, dispatch] = useReducer(reducer, initialState)
   return (
-    <WsContext.Provider value={{ state, dispatch }}>
+    <WsContext.Provider value={{ state, dispatch, config, defaultParams }}>
       {children}
     </WsContext.Provider>
   )
@@ -75,47 +92,59 @@ export const WSProvider = ({ children, urls }: WSProps) => {
 interface FetchProps {
   method?: 'POST' | 'GET'
   query?: {}
+  transformData?: (data: any) => any
 }
 
 type Fetch = {
-  llamar: (props: FetchProps) => {}
+  call: (props: FetchProps) => {}
+  hookId: number
 }
 
 export const useFetch = <T extends string>(key: T): Fetch & State => {
-  const { state, dispatch } = React.useContext(WsContext)
+  const { current: hookId } = useRef(Math.random())
+  const lastFetch = useRef<any>({})
+  const { state, dispatch, config, defaultParams = {} } = useContext(WsContext)
+  const prevConfig = usePrevious(config)
   const actual = state[key]
 
-  const llamar = React.useCallback(
-    async ({ method = 'GET', query }: FetchProps) => {
-      dispatch({ type: 'request', key })
-      const respuesta = null
-      try {
-        const respuesta = () => {
-          switch (method) {
-            case 'POST':
-              return axios.post(actual.url, query)
-            default:
-              return axios.get(actual.url, {
-                params: query
-              })
-          }
+  const call = useCallback(async (props: FetchProps) => {
+    const { method, query, transformData } = props
+    lastFetch.current = props
+    dispatch({ type: 'request', key })
+    const respuesta = null
+    try {
+      const { data, status } = await axios({
+        url: actual.url,
+        params: method === 'GET' ? { ...defaultParams, ...query } : undefined,
+        data: method === 'POST' ? { ...defaultParams, ...query } : undefined,
+        headers: config
+      })
+
+      if (status >= 200 && status < 300) {
+        let results = data
+        if (transformData) {
+          results = await transformData(data)
         }
-        const { data, status } = await respuesta()
-        if (status >= 200 && status < 300)
-          dispatch({ type: 'request', key, results: data })
-        else {
-          throw new Error('Error En servidor')
-        }
-      } catch (ex) {
-        dispatch({ type: 'request', key, error: ex.message })
+
+        dispatch({ type: 'request', key, results })
+      } else {
+        throw new Error('Error En servidor')
       }
-      return respuesta
-    },
-    []
-  )
+    } catch (ex) {
+      dispatch({ type: 'request', key, error: ex.message })
+    }
+    return respuesta
+  }, [])
+
+  useEffect(() => {
+    if (prevConfig && JSON.stringify(config) !== JSON.stringify(prevConfig)) {
+      call(lastFetch.current)
+    }
+  }, [config])
 
   return {
     ...actual,
-    llamar
+    call,
+    hookId
   }
 }
