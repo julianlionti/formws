@@ -1,13 +1,18 @@
 {
   "name": "formws-example",
-  "homepage": "https://Julián Lionti.github.io/formws",
+  "homepage": "https://git.racaps.com/formws",
   "version": "0.0.0",
   "private": true,
   "dependencies": {
+    "@types/jest": "^25.2.1",
+    "@types/node": "^13.13.2",
+    "@types/react": "^16.9.34",
+    "@types/react-dom": "^16.9.6",
+    "formws": "link:..",
     "react": "link:../node_modules/react",
     "react-dom": "link:../node_modules/react-dom",
     "react-scripts": "link:../node_modules/react-scripts",
-    "formws": "link:.."
+    "typescript": "^3.8.3"
   },
   "scripts": {
     "start": "node ../node_modules/react-scripts/bin/react-scripts.js start",
