@@ -34,7 +34,7 @@ const App = () => {
 ```tsx
 import React, { Component } from 'react'
 
-import { WsProvider, useFecth } from 'formws'
+import { WsProvider, useFetch } from 'formws'
 
 const InsideComponente = () => {
   const { data, isLoading, error, llamar } = useFetch('ejemplo')
