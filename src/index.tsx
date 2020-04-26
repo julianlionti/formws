@@ -115,6 +115,7 @@ export const useFetch = <T extends string>(key: T): Fetch & State => {
     try {
       const { data, status } = await axios({
         url: actual.url,
+        method,
         params: method === 'GET' ? { ...defaultParams, ...query } : undefined,
         data: method === 'POST' ? { ...defaultParams, ...query } : undefined,
         headers

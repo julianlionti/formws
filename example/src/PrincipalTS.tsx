@@ -6,17 +6,22 @@ import urls from './urls'
 type Keys = keyof typeof urls
 
 export default () => {
-  const { call, error, isLoading, data } = useFetch<Keys>('map')
+  const { call, error, isLoading, data } = useFetch<Keys>('clqh')
   const [prueba, setPrueba] = useState(false)
 
   useEffect(() => {
     if (data === undefined) {
-      call({ transformData: (data) => data.filter(({ id }: any) => id === 83) })
+      call({
+        method: 'POST',
+        // transformData: (data) => data.filter(({ id }: any) => id === 83)
+      })
       setTimeout(() => {
         setPrueba(true)
       }, 3000)
     }
   }, [call, data])
+
+  console.log(isLoading, data)
 
   return (
     <div>
