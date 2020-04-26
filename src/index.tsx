@@ -17,6 +17,7 @@ interface WSProps {
   }
   headers?: {}
   defaultParams?: {}
+  user?: {}
 }
 
 type State = {
@@ -40,6 +41,7 @@ type Action = {
 interface ContextState {
   dispatch: React.Dispatch<Action>
   state: InitialState
+  user?: {}
   headers?: {}
   defaultParams?: {}
 }
@@ -76,7 +78,8 @@ export const WSProvider = ({
   children,
   urls,
   headers,
-  defaultParams
+  defaultParams,
+  user
 }: WSProps) => {
   const initialState: InitialState = Object.keys(urls).reduce(
     (acc, it) => ({ ...acc, [it]: { ...defValues, url: urls[it] } }),
@@ -85,7 +88,9 @@ export const WSProvider = ({
 
   const [state, dispatch] = useReducer(reducer, initialState)
   return (
-    <WsContext.Provider value={{ state, dispatch, headers, defaultParams }}>
+    <WsContext.Provider
+      value={{ state, dispatch, headers, defaultParams, user }}
+    >
       {children}
     </WsContext.Provider>
   )
@@ -105,6 +110,11 @@ type Fetch = {
 export const getState = (): InitialState => {
   const { state } = useContext(WsContext)
   return state
+}
+
+export const getUser = (): undefined | {} => {
+  const { user } = useContext(WsContext)
+  return user
 }
 
 export const useFetch = <T extends string>(key: T): Fetch & State => {
