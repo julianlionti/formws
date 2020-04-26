@@ -57,16 +57,18 @@ const defValues: State = {
 const reducer = (state: InitialState, action: Action): InitialState => {
   const { key } = action
   switch (action.type) {
-    case 'request':
+    case 'request': {
+      const isLoading = !(action.error || action.results)
       return {
         ...state,
         [key]: {
           ...state[key],
-          isLoading: !(action.error || action.results),
-          data: action.results || state[key].data,
-          error: action.error || state[key].error
+          isLoading,
+          data: isLoading ? undefined : action.results || state[key].data,
+          error: isLoading ? undefined : action.error || state[key].error
         }
       }
+    }
   }
 }
 
@@ -113,8 +115,6 @@ export const useFetch = <T extends string>(key: T): Fetch & State => {
 
     lastFetch.current = props
     dispatch({ type: 'request', key })
-    const respuesta = null
-    console.log({ ...defaultParams, ...query })
     try {
       const { data, status } = await axios({
         url: actual.url,
