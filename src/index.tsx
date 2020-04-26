@@ -102,6 +102,11 @@ type Fetch = {
   hookId: number
 }
 
+export const getState = (): InitialState => {
+  const { state } = useContext(WsContext)
+  return state
+}
+
 export const useFetch = <T extends string>(key: T): Fetch & State => {
   const { current: hookId } = useRef(Math.random())
   const lastFetch = useRef<any>()
