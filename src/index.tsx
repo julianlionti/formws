@@ -114,6 +114,7 @@ export const useFetch = <T extends string>(key: T): Fetch & State => {
     lastFetch.current = props
     dispatch({ type: 'request', key })
     const respuesta = null
+    console.log({ ...defaultParams, ...query })
     try {
       const { data, status } = await axios({
         url: actual.url,
@@ -130,13 +131,14 @@ export const useFetch = <T extends string>(key: T): Fetch & State => {
         }
 
         dispatch({ type: 'request', key, results })
+        return { type: 'request', key, results }
       } else {
         throw new Error('Error En servidor')
       }
     } catch (ex) {
       dispatch({ type: 'request', key, error: ex.message })
+      return { type: 'request', key, error: ex.message }
     }
-    return respuesta
   }, [])
 
   useEffect(() => {
