@@ -36,6 +36,7 @@ type Action = {
   key: string
   results?: any
   error?: string | {}
+  data?: {} | []
 }
 
 interface ContextState {
@@ -57,7 +58,7 @@ const defValues: State = {
 }
 
 const reducer = (state: InitialState, action: Action): InitialState => {
-  const { key } = action
+  const { key, data } = action
   switch (action.type) {
     case 'request': {
       const isLoading = !(action.error || action.results)
@@ -66,7 +67,7 @@ const reducer = (state: InitialState, action: Action): InitialState => {
         [key]: {
           ...state[key],
           isLoading,
-          data: isLoading ? undefined : action.results || state[key].data,
+          data: isLoading && data ? data : action.results || state[key].data,
           error: isLoading ? undefined : action.error || state[key].error
         }
       }
@@ -100,6 +101,7 @@ interface FetchProps {
   method?: 'POST' | 'GET'
   query?: {}
   transformData?: (data: any) => any
+  data?: {} | []
 }
 
 type Fetch = {
@@ -125,11 +127,11 @@ export const useFetch = <T extends string>(key: T): Fetch & State => {
   const actual = state[key]
 
   const call = useCallback(async (props: FetchProps) => {
-    const { method, query, transformData } = props
+    const { method, query, transformData, data: remoteData } = props
     if (actual.isLoading) return
 
     lastFetch.current = props
-    dispatch({ type: 'request', key })
+    dispatch({ type: 'request', key, data: remoteData })
     try {
       const { data, status } = await axios({
         url: actual.url,
