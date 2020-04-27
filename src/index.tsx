@@ -33,7 +33,7 @@ type InitialState = {
 }
 
 type Action = {
-  type: 'request'
+  type: 'request' | 'clean'
   key: string
   results?: any
   error?: string | {}
@@ -62,6 +62,12 @@ const defValues: State = {
 const reducer = (state: InitialState, action: Action): InitialState => {
   const { key, data } = action
   switch (action.type) {
+    case 'clean': {
+      return {
+        ...state,
+        [key]: defValues
+      }
+    }
     case 'request': {
       const isLoading = !(action.error || action.results)
       return {
@@ -116,6 +122,7 @@ interface FetchProps {
 
 type Fetch = {
   call: (props: FetchProps) => {}
+  clean: () => void
   hookId: number
 }
 
@@ -142,44 +149,53 @@ export const useFetch = <T extends string>(key: T): Fetch & State => {
   const prevHeaders = usePrevious(headers)
   const actual = state[key]
 
-  const call = useCallback(async (props: FetchProps) => {
-    const { method, query, transformData, data: remoteData } = props
-    if (actual.isLoading) return
+  const call = useCallback(
+    async (props: FetchProps) => {
+      const { method, query, transformData, data: remoteData } = props
+      if (actual.isLoading) return
 
-    lastFetch.current = props
-    dispatch({ type: 'request', key, data: remoteData })
-    try {
-      const race = await Promise.race([
-        axios({
-          url: actual.url,
-          method,
-          params: method === 'GET' ? { ...defaultParams, ...query } : undefined,
-          data: method === 'POST' ? { ...defaultParams, ...query } : undefined,
-          headers
-        }),
-        new Promise((resolve) =>
-          setTimeout(() => resolve({ error: 'timeout' }), timeout)
-        )
-      ])
-      const { data, status, error }: any = race
-      if (error === 'timeout') {
-        throw new Error('Timeout')
-      }
-      if (status >= 200 && status < 300) {
-        let results = data
-        if (transformData) {
-          results = await transformData(data)
+      lastFetch.current = props
+      dispatch({ type: 'request', key, data: remoteData })
+      try {
+        const race = await Promise.race([
+          axios({
+            url: actual.url,
+            method,
+            params:
+              method === 'GET' ? { ...defaultParams, ...query } : undefined,
+            data:
+              method === 'POST' ? { ...defaultParams, ...query } : undefined,
+            headers
+          }),
+          new Promise((resolve) =>
+            setTimeout(() => resolve({ error: 'timeout' }), timeout)
+          )
+        ])
+        const { data, status, error }: any = race
+        if (error === 'timeout') {
+          throw new Error('Timeout')
         }
+        if (status >= 200 && status < 300) {
+          let results = data
+          if (transformData) {
+            results = await transformData(data)
+          }
 
-        dispatch({ type: 'request', key, results })
-        return { type: 'request', key, results }
-      } else {
-        throw new Error('Error En servidor')
+          dispatch({ type: 'request', key, results })
+          return { type: 'request', key, results }
+        } else {
+          throw new Error('Error En servidor')
+        }
+      } catch (ex) {
+        dispatch({ type: 'request', key, error: ex.message })
+        return { type: 'request', key, error: ex.message }
       }
-    } catch (ex) {
-      dispatch({ type: 'request', key, error: ex.message })
-      return { type: 'request', key, error: ex.message }
-    }
+    },
+    [actual]
+  )
+
+  const clean = useCallback(() => {
+    dispatch({ type: 'clean', key })
   }, [])
 
   useEffect(() => {
@@ -195,6 +211,7 @@ export const useFetch = <T extends string>(key: T): Fetch & State => {
   return {
     ...actual,
     call,
-    hookId
+    hookId,
+    clean
   }
 }
