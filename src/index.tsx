@@ -18,6 +18,7 @@ interface WSProps {
   headers?: {}
   defaultParams?: {}
   user?: {}
+  timeout?: number
 }
 
 type State = {
@@ -45,6 +46,7 @@ interface ContextState {
   user?: {}
   headers?: {}
   defaultParams?: {}
+  timeout?: number
 }
 
 const WsContext = createContext<ContextState>({
@@ -80,7 +82,8 @@ export const WSProvider = ({
   urls,
   headers,
   defaultParams,
-  user
+  user,
+  timeout
 }: WSProps) => {
   const initialState: InitialState = Object.keys(urls).reduce(
     (acc, it) => ({ ...acc, [it]: { ...defValues, url: urls[it] } }),
@@ -90,7 +93,14 @@ export const WSProvider = ({
   const [state, dispatch] = useReducer(reducer, initialState)
   return (
     <WsContext.Provider
-      value={{ state, dispatch, headers, defaultParams, user }}
+      value={{
+        state,
+        dispatch,
+        headers,
+        defaultParams,
+        user,
+        timeout
+      }}
     >
       {children}
     </WsContext.Provider>
@@ -122,7 +132,13 @@ export const getUser = (): undefined | {} => {
 export const useFetch = <T extends string>(key: T): Fetch & State => {
   const { current: hookId } = useRef(Math.random())
   const lastFetch = useRef<any>()
-  const { state, dispatch, headers, defaultParams = {} } = useContext(WsContext)
+  const {
+    state,
+    dispatch,
+    headers,
+    defaultParams = {},
+    timeout = 15000
+  } = useContext(WsContext)
   const prevHeaders = usePrevious(headers)
   const actual = state[key]
 
@@ -133,14 +149,22 @@ export const useFetch = <T extends string>(key: T): Fetch & State => {
     lastFetch.current = props
     dispatch({ type: 'request', key, data: remoteData })
     try {
-      const { data, status } = await axios({
-        url: actual.url,
-        method,
-        params: method === 'GET' ? { ...defaultParams, ...query } : undefined,
-        data: method === 'POST' ? { ...defaultParams, ...query } : undefined,
-        headers
-      })
-
+      const race = await Promise.race([
+        axios({
+          url: actual.url,
+          method,
+          params: method === 'GET' ? { ...defaultParams, ...query } : undefined,
+          data: method === 'POST' ? { ...defaultParams, ...query } : undefined,
+          headers
+        }),
+        new Promise((resolve) =>
+          setTimeout(() => resolve({ error: 'timeout' }), timeout)
+        )
+      ])
+      const { data, status, error }: any = race
+      if (error === 'timeout') {
+        throw new Error('Timeout')
+      }
       if (status >= 200 && status < 300) {
         let results = data
         if (transformData) {
