@@ -8,6 +8,7 @@ import React, {
 } from 'react'
 import axios from 'axios'
 import usePrevious from './usePrevious'
+import CustomError from './CustomError'
 
 interface WSProps {
   children: React.Component
@@ -173,7 +174,7 @@ export const useFetch = <T extends string>(key: T): Fetch & State => {
         ])
         const { data, status, error }: any = race
         if (error === 'timeout') {
-          throw new Error('Timeout')
+          throw new CustomError({ message: 'Timeout', code: 999 })
         }
         if (status >= 200 && status < 300) {
           let results = data
@@ -184,7 +185,7 @@ export const useFetch = <T extends string>(key: T): Fetch & State => {
           dispatch({ type: 'request', key, results })
           return { type: 'request', key, results }
         } else {
-          throw new Error('Error En servidor')
+          throw new CustomError({ message: 'Server Error', code: status })
         }
       } catch (ex) {
         dispatch({ type: 'request', key, error: ex.message })
