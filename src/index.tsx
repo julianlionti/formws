@@ -152,9 +152,8 @@ export const useFetch = <T extends string>(key: T): Fetch & State => {
 
   const call = useCallback(
     async (props: FetchProps) => {
-      const { method, query, transformData, data: remoteData } = props
+      const { method = 'GET', query, transformData, data: remoteData } = props
       if (actual.isLoading) return
-
       lastFetch.current = props
       dispatch({ type: 'request', key, data: remoteData })
       try {

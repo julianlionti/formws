@@ -7,26 +7,19 @@ import PrincipalTS from './PrincipalTS.tsx'
 import urls from './urls'
 
 const App = () => {
-  const [config, setConfig] = useState({
-    'Content-Type': 'application/json',
-    Accept: 'application/json'
-  })
-  
   return (
-    <WSProvider config={config} urls={urls}>
+    <WSProvider
+      config={{
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        Authorization: `Bearer ${'eyJhbGciOiJIUzI1NiJ9.eyJjbGllbnRfaWQiOjU0LCJkZXZpY2VfaWQiOm51bGx9.kH-FMYmmhHjHw3xREUoVmIbRTJaUg6AHJG_GWgR8G4I'}`
+      }}
+      urls={urls}
+    >
       <div>
         <PrincipalJS />
         <PrincipalTS />
-        <button
-          onClick={() => {
-            setConfig((conf) => ({
-              ...conf,
-              Authorization: `Bearer ${'eyJhbGciOiJIUzI1NiJ9.eyJjbGllbnRfaWQiOjgwLCJkZXZpY2VfaWQiOm51bGx9.U2YI9omBcE_Gx9BgIIJe9MSfKYodKCyVLfU87K6C_aQ'}`
-            }))
-          }}
-        >
-          Cambair estado
-        </button>
+        <button>Cambair estado</button>
       </div>
     </WSProvider>
   )
