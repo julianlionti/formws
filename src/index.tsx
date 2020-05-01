@@ -187,8 +187,8 @@ export const useFetch = <T extends string>(key: T): Fetch & State => {
           throw new CustomError({ message: 'Server Error', code: status })
         }
       } catch (ex) {
-        dispatch({ type: 'request', key, error: ex.message })
-        return { type: 'request', key, error: ex.message }
+        dispatch({ type: 'request', key, error: ex })
+        return { type: 'request', key, error: ex }
       }
     },
     [actual]
