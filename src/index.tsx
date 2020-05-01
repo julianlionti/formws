@@ -8,7 +8,7 @@ import React, {
 } from 'react'
 import axios from 'axios'
 import usePrevious from './usePrevious'
-import CustomError from './CustomError'
+// import CustomError, { CustomErrorProps } from './CustomError' // eslint-disable-line
 
 interface WSProps {
   children: React.Component
@@ -22,10 +22,15 @@ interface WSProps {
   timeout?: number
 }
 
+interface ErrorProps {
+  message: string
+  code: number
+}
+
 type State = {
   isLoading: boolean
   data?: [] | {} | null
-  error?: string | {} | null
+  error?: ErrorProps | null
   url: string
 }
 
@@ -37,7 +42,7 @@ type Action = {
   type: 'request' | 'clean'
   key: string
   results?: any
-  error?: string | {}
+  error?: ErrorProps
   data?: {} | []
 }
 
@@ -173,7 +178,7 @@ export const useFetch = <T extends string>(key: T): Fetch & State => {
         ])
         const { data, status, error }: any = race
         if (error === 'timeout') {
-          throw new CustomError({ message: 'Timeout', code: 999 })
+          throw new Error('Timeout')
         }
         if (status >= 200 && status < 300) {
           let results = data
@@ -184,11 +189,19 @@ export const useFetch = <T extends string>(key: T): Fetch & State => {
           dispatch({ type: 'request', key, results })
           return { type: 'request', key, results }
         } else {
-          throw new CustomError({ message: 'Server Error', code: status })
+          const error: ErrorProps = { message: 'Error servidor', code: status }
+          dispatch({ type: 'request', key, error })
+          return { type: 'request', key, error }
         }
       } catch (ex) {
-        dispatch({ type: 'request', key, error: ex })
-        return { type: 'request', key, error: ex }
+        const isTimeOut = (ex.message = 'Timeout')
+
+        const error: ErrorProps = {
+          message: isTimeOut ? 'Tiempo de espera agotado' : 'Error desconocido',
+          code: isTimeOut ? 999 : 998
+        }
+        dispatch({ type: 'request', key, error })
+        return { type: 'request', key, error }
       }
     },
     [actual]

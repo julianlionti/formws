@@ -15,6 +15,7 @@ const App = () => {
         Authorization: `Bearer ${'eyJhbGciOiJIUzI1NiJ9.eyJjbGllbnRfaWQiOjU0LCJkZXZpY2VfaWQiOm51bGx9.kH-FMYmmhHjHw3xREUoVmIbRTJaUg6AHJG_GWgR8G4I'}`
       }}
       urls={urls}
+      timeout={3000}
     >
       <div>
         <PrincipalJS />
