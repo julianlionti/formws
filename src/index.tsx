@@ -4,14 +4,15 @@ import React, {
   useContext,
   useCallback,
   createContext,
-  useEffect
+  useEffect,
+  useState
 } from 'react'
 import axios from 'axios'
 import usePrevious from './usePrevious'
 // import CustomError, { CustomErrorProps } from './CustomError' // eslint-disable-line
 
 interface WSProps {
-  children: React.Component
+  children: React.Component<any, any>
   intial?: any
   urls: {
     [url: string]: string
@@ -20,6 +21,7 @@ interface WSProps {
   defaultParams?: {}
   user?: {}
   timeout?: number
+  onUser?: (user: any) => void
 }
 
 interface ErrorProps {
@@ -49,10 +51,11 @@ type Action = {
 interface ContextState {
   dispatch: React.Dispatch<Action>
   state: InitialState
-  user?: {}
   headers?: {}
   defaultParams?: {}
   timeout?: number
+  user?: {}
+  setUser?: any
 }
 
 const WsContext = createContext<ContextState>({
@@ -71,7 +74,10 @@ const reducer = (state: InitialState, action: Action): InitialState => {
     case 'clean': {
       return {
         ...state,
-        [key]: defValues
+        [key]: {
+          ...defValues,
+          url: state[key].url
+        }
       }
     }
     case 'request': {
@@ -95,12 +101,18 @@ export const WSProvider = ({
   headers,
   defaultParams,
   user,
-  timeout
+  timeout,
+  onUser
 }: WSProps) => {
   const initialState: InitialState = Object.keys(urls).reduce(
     (acc, it) => ({ ...acc, [it]: { ...defValues, url: urls[it] } }),
     {}
   )
+  const [usuario, setUsuario] = useState(user)
+
+  useEffect(() => {
+    onUser && onUser(usuario)
+  }, [usuario])
 
   const [state, dispatch] = useReducer(reducer, initialState)
   return (
@@ -110,8 +122,9 @@ export const WSProvider = ({
         dispatch,
         headers,
         defaultParams,
-        user,
-        timeout
+        timeout,
+        user: usuario,
+        setUser: setUsuario
       }}
     >
       {children}
@@ -142,6 +155,13 @@ export const getUser = (): undefined | {} => {
   return user
 }
 
+export const updateUser = () => {
+  const { setUser } = useContext(WsContext)
+
+  const updateUser = useCallback((user) => setUser(user), [])
+  return updateUser
+}
+
 export const useFetch = <T extends string>(key: T): Fetch & State => {
   const { current: hookId } = useRef(Math.random())
   const lastFetch = useRef<any>()
@@ -162,24 +182,17 @@ export const useFetch = <T extends string>(key: T): Fetch & State => {
       lastFetch.current = props
       dispatch({ type: 'request', key, data: remoteData })
       try {
-        const race = await Promise.race([
-          axios({
-            url: actual.url,
-            method,
-            params:
-              method === 'GET' ? { ...defaultParams, ...query } : undefined,
-            data:
-              method === 'POST' ? { ...defaultParams, ...query } : undefined,
-            headers
-          }),
-          new Promise((resolve) =>
-            setTimeout(() => resolve({ error: 'timeout' }), timeout)
-          )
-        ])
-        const { data, status, error }: any = race
-        if (error === 'timeout') {
-          throw new Error('Timeout')
-        }
+        const respuesta = await axios({
+          timeout,
+          timeoutErrorMessage: 'Timeout',
+          url: actual.url,
+          method,
+          params: method === 'GET' ? { ...defaultParams, ...query } : undefined,
+          data: method === 'POST' ? { ...defaultParams, ...query } : undefined,
+          headers
+        })
+
+        const { data, status }: any = respuesta
         if (status >= 200 && status < 300) {
           let results = data
           if (transformData) {
@@ -194,11 +207,12 @@ export const useFetch = <T extends string>(key: T): Fetch & State => {
           return { type: 'request', key, error }
         }
       } catch (ex) {
-        const isTimeOut = (ex.message = 'Timeout')
+        console.log(ex)
+        const isTimeOut = ex.message === 'Timeout'
 
         const error: ErrorProps = {
-          message: isTimeOut ? 'Tiempo de espera agotado' : 'Error desconocido',
-          code: isTimeOut ? 999 : 998
+          message: isTimeOut ? 'Tiempo de espera agotado' : ex.message,
+          code: isTimeOut ? 999 : 500
         }
         dispatch({ type: 'request', key, error })
         return { type: 'request', key, error }
