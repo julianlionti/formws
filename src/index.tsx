@@ -31,9 +31,9 @@ interface ErrorProps {
 
 type State = {
   isLoading: boolean
-  data?: [] | {} | null
   error?: ErrorProps | null
   url: string
+  data?: any
 }
 
 type InitialState = {
@@ -108,10 +108,12 @@ export const WSProvider = ({
     (acc, it) => ({ ...acc, [it]: { ...defValues, url: urls[it] } }),
     {}
   )
-  const [usuario, setUsuario] = useState(user)
+  const [usuario, setUsuario] = useState<any>(user)
 
   useEffect(() => {
-    onUser && onUser(usuario)
+    if (onUser) {
+      if (usuario === null || Object.keys(usuario).length > 0) onUser(usuario)
+    }
   }, [usuario])
 
   const [state, dispatch] = useReducer(reducer, initialState)
@@ -137,12 +139,14 @@ interface FetchProps {
   query?: {}
   transformData?: (data: any) => any
   data?: {} | []
+  isFormData?: boolean
 }
 
 type Fetch = {
+  hookId: number
   call: (props: FetchProps) => {}
   clean: () => void
-  hookId: number
+  refresh: () => void
 }
 
 export const getState = (): InitialState => {
@@ -177,19 +181,39 @@ export const useFetch = <T extends string>(key: T): Fetch & State => {
 
   const call = useCallback(
     async (props: FetchProps) => {
-      const { method = 'GET', query, transformData, data: remoteData } = props
+      const {
+        method = 'GET',
+        query,
+        transformData,
+        data: remoteData,
+        isFormData
+      } = props
       if (actual.isLoading) return
       lastFetch.current = props
       dispatch({ type: 'request', key, data: remoteData })
       try {
+        const extraHeaders = isFormData
+          ? { 'content-type': 'multipart/form-data' }
+          : {}
+
+        const finalHeaders = { ...headers, ...extraHeaders }
+        const finalParams = { ...defaultParams, ...query }
+        let formData: any = null
+        if (isFormData) {
+          formData = Object.keys(finalParams).reduce((acc, cur) => {
+            acc.append(cur, finalParams[cur])
+            return acc
+          }, new FormData())
+        }
+
         const respuesta = await axios({
           timeout,
           timeoutErrorMessage: 'Timeout',
           url: actual.url,
-          method,
-          params: method === 'GET' ? { ...defaultParams, ...query } : undefined,
-          data: method === 'POST' ? { ...defaultParams, ...query } : undefined,
-          headers
+          method, // : method === 'GET' ? 'GET' : 'POST',
+          params: method === 'GET' ? formData || finalParams : undefined,
+          data: method === 'POST' ? formData || finalParams : undefined,
+          headers: finalHeaders
         })
 
         const { data, status }: any = respuesta
@@ -225,6 +249,10 @@ export const useFetch = <T extends string>(key: T): Fetch & State => {
     dispatch({ type: 'clean', key })
   }, [])
 
+  const refresh = useCallback(() => {
+    call(lastFetch.current)
+  }, [])
+
   useEffect(() => {
     if (
       prevHeaders &&
@@ -239,6 +267,7 @@ export const useFetch = <T extends string>(key: T): Fetch & State => {
     ...actual,
     call,
     hookId,
-    clean
+    clean,
+    refresh
   }
 }
