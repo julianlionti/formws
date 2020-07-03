@@ -7,9 +7,8 @@ import React, {
   useEffect,
   useState
 } from 'react'
-import axios from 'axios'
+import axios, { Method } from 'axios'
 import usePrevious from './usePrevious'
-// import CustomError, { CustomErrorProps } from './CustomError' // eslint-disable-line
 
 interface WSProps {
   children: React.Component<any, any>
@@ -135,7 +134,7 @@ export const WSProvider = ({
 }
 
 interface FetchProps {
-  method?: 'POST' | 'GET'
+  method?: Method // 'POST' | 'GET'
   query?: {}
   transformData?: (data: any) => any
   data?: {} | []

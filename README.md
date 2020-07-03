@@ -4,14 +4,25 @@
 
 [![NPM](https://img.shields.io/npm/v/formws.svg)](https://www.npmjs.com/package/formws) [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
 
-## Install
+## Instalar
 
 ```bash
 npm install formws
 yarn add formws
 ```
 
-## Usage
+## Descripcion
+
+Librería para realizar llamadas a urls, y manejar usuarios dentro de la app.
+Ventajas:
+  Se escribe menos código.
+  Se puede llamar tanto sincrónico como asincrónico.
+  Manejo de usuario en React y React-Native
+  Se unifican las URLS que se consumen
+  Se usan las ultimas funciones de React, Context, useReducer
+  Cada request que se haga, va a estar disponible en la totalidad de la aplicación al estilo del redux.
+  
+## Uso
 
 ```tsx
 import React, { Component } from 'react'
@@ -26,7 +37,7 @@ const App = () => {
       urls={{
         ejemplo: 'www.ejemplo.com',
         ejemplo1: 'www.ejemplo1.com'
-      }}
+      }} // Objeto con las urls para consumir dentro de la app
       onUser={(user) => {
         if (user) {
           localStorage.setItem(Constants.CLIENT_INFO, JSON.stringify(user))
@@ -35,14 +46,14 @@ const App = () => {
           setUser(null)
           localStorage.removeItem(Constants.CLIENT_INFO)
         }
-      }}
-      user={user}
+      }} // Método que se llama cuando desde algún componente se utliza setUser. Ideal para usar tanto en react como react-native ya que podes guardarlo de la forma que pinte.
+      user={user} // Si guardaste el usuario en algun lado, acá se lo pasas
       headers={{
         Authorization: user ? `Bearer ${user.token}` : undefined
-      }}
+      }} // Headers que van a tener TODAS las llamadas que se hagan
       defaultParams={{
         device_id: 'UNIQUE_ID'
-      }}
+      }} // Parametros por defecto que van a tener TODAS las llamadas
     >
       >
       <RestApp />
@@ -99,6 +110,7 @@ const InsideComponente = () => {
   )
 }
 ```
+
 ## API
 
 ```tsx
@@ -133,6 +145,6 @@ const InsideComponente = () => {
 }
 ```
 
-## License
+## Licencia
 
 MIT © [Julián Lionti](https://github.com/Julián Lionti)
