@@ -99,6 +99,7 @@ const InsideComponente = () => {
   )
 }
 ```
+## API
 
 ```tsx
 import { useFetch } from 'formws'
