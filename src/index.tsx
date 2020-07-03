@@ -223,15 +223,6 @@ export const useFetch = <T extends string>(key: T): Fetch & State => {
 
         dispatch({ type: 'request', key, results })
         return { type: 'request', key, results }
-        /*
-        console.log(respuesta)
-        if (status >= 200 && status < 300) {
-         
-        } else {
-          const error: ErrorProps = { message: 'Error servidor', code: status }
-          dispatch({ type: 'request', key, error })
-          return { type: 'request', key, error }
-        } */
       } catch (ex) {
         const { status, data } = ex.response || {}
 
