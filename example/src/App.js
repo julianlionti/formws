@@ -8,18 +8,10 @@ import urls from './urls'
 
 const App = () => {
   return (
-    <WSProvider
-      config={{
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-        Authorization: `Bearer ${'eyJhbGciOiJIUzI1NiJ9.eyJjbGllbnRfaWQiOjU0LCJkZXZpY2VfaWQiOm51bGx9.kH-FMYmmhHjHw3xREUoVmIbRTJaUg6AHJG_GWgR8G4I'}`
-      }}
-      urls={urls}
-      timeout={3000}
-    >
+    <WSProvider urls={{ get: 'sarasa' }}>
       <div>
-        <PrincipalJS />
-        <PrincipalTS />
+        {/* <PrincipalJS />
+        <PrincipalTS /> */}
         <button>Cambair estado</button>
       </div>
     </WSProvider>

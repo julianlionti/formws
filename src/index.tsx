@@ -216,28 +216,32 @@ export const useFetch = <T extends string>(key: T): Fetch & State => {
           headers: finalHeaders
         })
 
-        const { data, status }: any = respuesta
-        if (status >= 200 && status < 300) {
-          let results = data
-          if (transformData) {
-            results = await transformData(data)
-          }
+        const { data }: any = respuesta
+        let results = data
+        if (transformData) {
+          results = await transformData(data)
+        }
 
-          dispatch({ type: 'request', key, results })
-          return { type: 'request', key, results }
+        dispatch({ type: 'request', key, results })
+        return { type: 'request', key, results }
+        /*
+        console.log(respuesta)
+        if (status >= 200 && status < 300) {
+         
         } else {
           const error: ErrorProps = { message: 'Error servidor', code: status }
           dispatch({ type: 'request', key, error })
           return { type: 'request', key, error }
-        }
+        } */
       } catch (ex) {
-        console.log(ex)
-        const isTimeOut = ex.message === 'Timeout'
+        const { status, data } = ex.response || {}
 
+        const isTimeOut = ex.message === 'Timeout'
         const error: ErrorProps = {
-          message: isTimeOut ? 'Tiempo de espera agotado' : ex.message,
-          code: isTimeOut ? 999 : 500
+          message: isTimeOut ? 'Tiempo de espera agotado' : data || ex.message,
+          code: isTimeOut ? 999 : status || 500
         }
+
         dispatch({ type: 'request', key, error })
         return { type: 'request', key, error }
       }

@@ -6,7 +6,7 @@ import urls from './urls'
 type Keys = keyof typeof urls
 
 export default () => {
-  const { call, error, isLoading, data } = useFetch<Keys>('clqh')
+  const { call, error, isLoading, data } = useFetch<Keys>('espe')
   const [prueba, setPrueba] = useState(false)
 
   console.log(error && error.code)
