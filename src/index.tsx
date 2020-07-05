@@ -57,11 +57,6 @@ interface ContextState {
   setUser?: any
 }
 
-interface ReqProps {
-  actual: State
-}
-type RequestProps = Partial<ContextState & WSProps & FetchProps & ReqProps>
-
 const WsContext = createContext<ContextState>({
   dispatch: () => {},
   state: {}
@@ -147,6 +142,12 @@ interface FetchProps {
   forceSync?: boolean
 }
 
+interface ResponseProps {
+  error?: ErrorProps
+  results?: any
+  key: keyof InitialState
+}
+
 type Fetch = {
   hookId: number
   call: (props: FetchProps) => {}
@@ -171,13 +172,24 @@ export const updateUser = () => {
   return updateUser
 }
 
+interface RequestProps {
+  isFormData?: boolean
+  headers?: {}
+  defaultParams?: {}
+  query?: {}
+  timeout?: number
+  url: string
+  method: Method
+  transformData?: (data: any) => {} | []
+}
+
 export const makeRequest = async ({
   isFormData,
   headers,
   defaultParams,
   query,
   timeout,
-  actual,
+  url,
   method,
   transformData
 }: RequestProps) => {
@@ -198,7 +210,7 @@ export const makeRequest = async ({
   const respuesta = await axios({
     timeout,
     timeoutErrorMessage: 'Timeout',
-    url: actual!.url,
+    url,
     method, // : method === 'GET' ? 'GET' : 'POST',
     params: method === 'GET' ? formData || finalParams : undefined,
     data: method === 'POST' ? formData || finalParams : undefined,
@@ -227,7 +239,7 @@ export const useFetch = <T extends string>(key: T): Fetch & State => {
   const actual = state[key]
 
   const call = useCallback(
-    async (props: FetchProps) => {
+    async (props: FetchProps): Promise<ResponseProps> => {
       const {
         method = 'GET',
         query,
@@ -236,7 +248,6 @@ export const useFetch = <T extends string>(key: T): Fetch & State => {
         isFormData,
         forceSync
       } = props
-      if (actual.isLoading) return
       lastFetch.current = props
       if (forceSync !== true)
         dispatch({ type: 'request', key, data: remoteData })
@@ -247,14 +258,14 @@ export const useFetch = <T extends string>(key: T): Fetch & State => {
           query,
           transformData,
           isFormData,
-          actual,
+          url: actual.url,
           defaultParams,
           timeout
         })
 
         if (forceSync !== true) dispatch({ type: 'request', key, results })
 
-        return { type: 'request', key, results }
+        return { key, results }
       } catch (ex) {
         const { status, data } = ex.response || {}
 
@@ -266,7 +277,7 @@ export const useFetch = <T extends string>(key: T): Fetch & State => {
 
         if (forceSync !== true) dispatch({ type: 'request', key, error })
 
-        return { type: 'request', key, error }
+        return { key, error }
       }
     },
     [actual]

@@ -1,9 +1,13 @@
 import React, { useEffect, useState } from 'react'
-import { useFetch } from 'formws'
+import { useFetch, makeRequest } from 'formws'
 import Otro from './Otro'
 import urls from './urls'
 
 type Keys = keyof typeof urls
+
+const prueba = () => {
+  const result = makeRequest({ url: 'asda', query: {}, method: 'GET' })
+}
 
 export default () => {
   const { call, error, isLoading, data } = useFetch<Keys>('espe')
