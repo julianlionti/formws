@@ -1,7 +1,5 @@
 # formws
 
-> Made with create-react-library
-
 [![NPM](https://img.shields.io/npm/v/formws.svg)](https://www.npmjs.com/package/formws) [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
 
 ## Instalar
@@ -15,13 +13,13 @@ yarn add formws
 
 Librería para realizar llamadas a urls, y manejar usuarios dentro de la app.
 Ventajas:
-  Se escribe menos código.
-  Se puede llamar tanto sincrónico como asincrónico.
-  Manejo de usuario en React y React-Native
-  Se unifican las URLS que se consumen
-  Se usan las ultimas funciones de React, Context, useReducer
-  Cada request que se haga, va a estar disponible en la totalidad de la aplicación al estilo del redux.
-  
+Se escribe menos código.
+Se puede llamar tanto sincrónico como asincrónico.
+Manejo de usuario en React y React-Native
+Se unifican las URLS que se consumen
+Se usan las ultimas funciones de React, Context, useReducer
+Cada request que se haga, va a estar disponible en la totalidad de la aplicación al estilo del redux.
+
 ## Uso
 
 ```tsx
@@ -74,11 +72,7 @@ const InsideComponente = () => {
     call({ method: 'GET', query: {} })
   }, [])
 
-  return (
-    <>
-      <Components />
-    </>
-  )
+  return <Components />
 }
 ```
 
@@ -93,20 +87,18 @@ const InsideComponente = () => {
   const { data, isLoading, error, call } = useFetch('ejemplo')
 
   return (
-    <>
-      <Components
-        onClick={() => {
-          const result = await call({ method: 'GET' })
-          const { results, error } = respuesta
-          if (error) {
-            //Misma información que en el error de arriba
-          }
-          if (results) {
-            // Misma información que en el data de arriba
-          }
-        }}
-      />
-    </>
+    <Components
+      onClick={() => {
+        const result = await call({ method: 'GET' })
+        const { results, error } = respuesta
+        if (error) {
+          //Misma información que en el error de arriba
+        }
+        if (results) {
+          // Misma información que en el data de arriba
+        }
+      }}
+    />
   )
 }
 ```
@@ -128,7 +120,6 @@ const InsideComponente = () => {
   } = useFetch('ejemplo')
 
   return (
-    <>
       <Components
         onClick={() => {
           const result = await call({
@@ -137,10 +128,10 @@ const InsideComponente = () => {
             data: undefined || {} || [], // Objeto o array Para poner en el contexto antes de llamar
             transformData: undefined || (data) => {return data}, //Metodo para modificar el resultado antes de ponerlo en la variable data, lo que devuelva, va a estar ahí
             isFormData: undefined || true || false // Si estás mandando archivos, usar en true
+            forceSync: undefined || true || false // Solo se usa el axios, no se guarda el estado en el contexto ni se rerenderiza el componente
           })
         }}
       />
-    </>
   )
 }
 ```
