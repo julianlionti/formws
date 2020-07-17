@@ -86,7 +86,7 @@ const reducer = (state: InitialState, action: Action): InitialState => {
         [key]: {
           ...state[key],
           isLoading,
-          data: isLoading && data ? data : action.results || state[key]?.data,
+          data: isLoading && data ? data : action.results || state[key].data,
           error: isLoading ? undefined : action.error || state[key].error
         }
       }
@@ -139,13 +139,6 @@ interface FetchProps {
   transformData?: (data: any) => any
   data?: {} | []
   isFormData?: boolean
-  forceSync?: boolean
-}
-
-interface ResponseProps {
-  error?: ErrorProps
-  results?: any
-  key: keyof InitialState
 }
 
 type Fetch = {
@@ -172,62 +165,6 @@ export const updateUser = () => {
   return updateUser
 }
 
-interface RequestProps {
-  isFormData?: boolean
-  headers?: {}
-  defaultParams?: {}
-  query?: {}
-  timeout?: number
-  url: string
-  method: Method
-  transformData?: (data: any) => {} | []
-}
-
-export const makeRequest = async ({
-  isFormData,
-  headers,
-  defaultParams,
-  query,
-  timeout,
-  url,
-  method,
-  transformData
-}: RequestProps) => {
-  const extraHeaders = isFormData
-    ? { 'content-type': 'multipart/form-data' }
-    : {}
-
-  const finalHeaders = { ...headers, ...extraHeaders }
-  const finalParams = { ...defaultParams, ...query }
-  let formData: any = null
-  if (isFormData) {
-    formData = Object.keys(finalParams).reduce((acc, cur) => {
-      acc.append(cur, finalParams[cur])
-      return acc
-    }, new FormData())
-  }
-
-  console.log('respuesta')
-
-  const respuesta = await axios({
-    timeout,
-    timeoutErrorMessage: 'Timeout',
-    url,
-    method, // : method === 'GET' ? 'GET' : 'POST',
-    params: method === 'GET' ? formData || finalParams : undefined,
-    data: method === 'POST' ? formData || finalParams : undefined,
-    headers: finalHeaders
-  })
-  console.log(respuesta)
-
-  const { data }: any = respuesta
-  let results = data
-  if (transformData) {
-    results = await transformData(data)
-  }
-  return results
-}
-
 export const useFetch = <T extends string>(key: T): Fetch & State => {
   const { current: hookId } = useRef(Math.random())
   const lastFetch = useRef<any>()
@@ -242,35 +179,50 @@ export const useFetch = <T extends string>(key: T): Fetch & State => {
   const actual = state[key]
 
   const call = useCallback(
-    async (props: FetchProps): Promise<ResponseProps | null> => {
+    async (props: FetchProps) => {
       const {
         method = 'GET',
         query,
         transformData,
         data: remoteData,
-        isFormData,
-        forceSync
+        isFormData
       } = props
-      if (actual.isLoading) return null
+      if (actual.isLoading) return
       lastFetch.current = props
-
-      if (forceSync !== true)
-        dispatch({ type: 'request', key, data: remoteData })
-
+      dispatch({ type: 'request', key, data: remoteData })
       try {
-        const results = await makeRequest({
-          method,
-          query,
-          transformData,
-          isFormData,
+        const extraHeaders = isFormData
+          ? { 'content-type': 'multipart/form-data' }
+          : {}
+
+        const finalHeaders = { ...headers, ...extraHeaders }
+        const finalParams = { ...defaultParams, ...query }
+        let formData: any = null
+        if (isFormData) {
+          formData = Object.keys(finalParams).reduce((acc, cur) => {
+            acc.append(cur, finalParams[cur])
+            return acc
+          }, new FormData())
+        }
+
+        const respuesta = await axios({
+          timeout,
+          timeoutErrorMessage: 'Timeout',
           url: actual.url,
-          defaultParams,
-          timeout
+          method, // : method === 'GET' ? 'GET' : 'POST',
+          params: method === 'GET' ? formData || finalParams : undefined,
+          data: method === 'POST' ? formData || finalParams : undefined,
+          headers: finalHeaders
         })
 
-        if (forceSync !== true) dispatch({ type: 'request', key, results })
+        const { data }: any = respuesta
+        let results = data
+        if (transformData) {
+          results = await transformData(data)
+        }
 
-        return { key, results }
+        dispatch({ type: 'request', key, results })
+        return { type: 'request', key, results }
       } catch (ex) {
         const { status, data } = ex.response || {}
 
@@ -280,9 +232,8 @@ export const useFetch = <T extends string>(key: T): Fetch & State => {
           code: isTimeOut ? 999 : status || 500
         }
 
-        if (forceSync !== true) dispatch({ type: 'request', key, error })
-
-        return { key, error }
+        dispatch({ type: 'request', key, error })
+        return { type: 'request', key, error }
       }
     },
     [actual]

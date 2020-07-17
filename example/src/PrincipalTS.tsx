@@ -5,15 +5,16 @@ import urls from './urls'
 
 type Keys = keyof typeof urls
 
-const prueba = () => {
-  const result = makeRequest({ url: 'asda', query: {}, method: 'GET' })
+const pruebas = () => {
+  // const pruesada = prueba<Keys>('clqh', { method: 'GET' })
+  const result = makeRequest({ url: urls.clqh, query: {}, method: 'GET' })
+  console.log(result)
 }
 
 export default () => {
-  const { call, error, isLoading, data } = useFetch<Keys>('espe')
+  const { call, error, isLoading, data } = useFetch<Keys>('clqh')
   const [prueba, setPrueba] = useState(false)
 
-  console.log(error && error.code)
   useEffect(() => {
     if (!data && !error) {
       call({
@@ -22,12 +23,10 @@ export default () => {
       })
     }
   }, [call, data, error])
-
-  console.log(isLoading, data)
-
+  console.log(data)
   return (
     <div>
-      <p>Vamos Racing: TypeScript</p>
+      <p onClick={() => pruebas()}>Vamos Racing: TypeScript</p>
       <button onClick={() => setPrueba(!prueba)}>Mostrar/Ocultas</button>
       {isLoading && <p>Cargando</p>}
       {prueba && !isLoading && <Otro />}
