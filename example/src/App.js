@@ -8,10 +8,10 @@ import urls from './urls'
 
 const App = () => {
   return (
-    <WSProvider urls={urls}>
+    <WSProvider urls={urls} headers={{ Dalepa: 'dale' }}>
       <div>
         {/* {/* <PrincipalJS /> */}
-        <PrincipalTS /> 
+        <PrincipalTS />
         <button>Cambair estado</button>
       </div>
     </WSProvider>

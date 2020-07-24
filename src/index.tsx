@@ -140,6 +140,7 @@ interface FetchProps {
   data?: {} | []
   isFormData?: boolean
   forceSync?: boolean
+  urlParams?: string[]
 }
 
 interface ResponseProps {
@@ -150,7 +151,7 @@ interface ResponseProps {
 
 type Fetch = {
   hookId: number
-  call: (props: FetchProps) => {}
+  call: (props: FetchProps) => Promise<ResponseProps | null>
   clean: () => void
   refresh: () => void
 }
@@ -181,6 +182,7 @@ interface RequestProps {
   url: string
   method: Method
   transformData?: (data: any) => {} | []
+  urlParams?: string[]
 }
 
 export const makeRequest = async ({
@@ -191,7 +193,8 @@ export const makeRequest = async ({
   timeout,
   url,
   method,
-  transformData
+  transformData,
+  urlParams
 }: RequestProps) => {
   const extraHeaders = isFormData
     ? { 'content-type': 'multipart/form-data' }
@@ -207,18 +210,19 @@ export const makeRequest = async ({
     }, new FormData())
   }
 
-  console.log('respuesta')
-
+  console.log({ finalHeaders })
+  const finalUrl =
+    urlParams !== undefined ? url + '/' + urlParams?.join('/') : url
+  // console.log(finalUrl)
   const respuesta = await axios({
     timeout,
     timeoutErrorMessage: 'Timeout',
-    url,
+    url: finalUrl,
     method, // : method === 'GET' ? 'GET' : 'POST',
     params: method === 'GET' ? formData || finalParams : undefined,
     data: method === 'POST' ? formData || finalParams : undefined,
     headers: finalHeaders
   })
-  console.log(respuesta)
 
   const { data }: any = respuesta
   let results = data
@@ -249,7 +253,8 @@ export const useFetch = <T extends string>(key: T): Fetch & State => {
         transformData,
         data: remoteData,
         isFormData,
-        forceSync
+        forceSync,
+        urlParams
       } = props
       if (actual.isLoading) return null
       lastFetch.current = props
@@ -265,7 +270,9 @@ export const useFetch = <T extends string>(key: T): Fetch & State => {
           isFormData,
           url: actual.url,
           defaultParams,
-          timeout
+          timeout,
+          urlParams,
+          headers
         })
 
         if (forceSync !== true) dispatch({ type: 'request', key, results })

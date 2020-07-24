@@ -5,9 +5,13 @@ import urls from './urls'
 
 type Keys = keyof typeof urls
 
-const pruebas = () => {
+const pruebas = async () => {
   // const pruesada = prueba<Keys>('clqh', { method: 'GET' })
-  const result = makeRequest({ url: urls.clqh, query: {}, method: 'GET' })
+  const result = await makeRequest({
+    url: urls.clqh,
+    urlParams: ['02'],
+    method: 'GET'
+  })
   console.log(result)
 }
 
