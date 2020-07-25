@@ -111,7 +111,8 @@ export const WSProvider = ({
 
   useEffect(() => {
     if (onUser) {
-      if (usuario === null || Object.keys(usuario).length > 0) onUser(usuario)
+      if (usuario === null || Object.keys(usuario || {}).length > 0)
+        onUser(usuario)
     }
   }, [usuario])
 
@@ -292,7 +293,7 @@ export const useFetch = <T extends string>(key: T): Fetch & State => {
         return { key, error }
       }
     },
-    [actual]
+    [actual, headers, defaultParams, timeout]
   )
 
   const clean = useCallback(() => {

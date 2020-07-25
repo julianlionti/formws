@@ -1,50 +1,34 @@
-import React, { useEffect, useState } from 'react'
-import { useFetch, makeRequest } from 'formws'
-import Otro from './Otro'
+import React from 'react'
+import { useFetch, updateUser, getUser } from 'formws'
 import urls from './urls'
 
 type Keys = keyof typeof urls
 
-const pruebas = async () => {
-  // const pruesada = prueba<Keys>('clqh', { method: 'GET' })
-  const result = await makeRequest({
-    url: urls.clqh,
-    urlParams: ['02'],
-    method: 'GET'
-  })
-  console.log(result)
-}
-
 export default () => {
-  const { call, error, isLoading, data, clean } = useFetch<Keys>('clqh')
-  const [prueba, setPrueba] = useState(false)
+  const setUser = updateUser()
+  const user = getUser()
+  const { call, isLoading, data, error } = useFetch<Keys>('espe')
+  console.log(data, error, user)
 
-  useEffect(() => {
-    if (!data && !error) {
-      call({
-        method: 'POST'
-        // transformData: (data) => data.filter(({ id }: any) => id === 83)
-      })
-    }
-  }, [call, data, error])
   return (
     <div>
-      <p
-        onClick={() => {
-          console.log(data)
-        }}
-      >
-        Vamos Racing: TypeScript
+      <p onClick={() => setUser({ uid: 'HEDZDko7smbIfI3KnQR2VR5gsCw2' })}>
+        Setear usuario
       </p>
       <button
         onClick={() => {
-          clean()
+          call({
+            method: 'POST',
+            query: {
+              items: {},
+              direccion: {}
+            }
+          })
         }}
       >
-        Mostrar/Ocultas
+        Llamar
       </button>
       {isLoading && <p>Cargando</p>}
-      {prueba && !isLoading && <Otro />}
     </div>
   )
 }
