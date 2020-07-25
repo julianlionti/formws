@@ -16,7 +16,7 @@ const pruebas = async () => {
 }
 
 export default () => {
-  const { call, error, isLoading, data } = useFetch<Keys>('clqh')
+  const { call, error, isLoading, data, clean } = useFetch<Keys>('clqh')
   const [prueba, setPrueba] = useState(false)
 
   useEffect(() => {
@@ -27,11 +27,22 @@ export default () => {
       })
     }
   }, [call, data, error])
-  console.log(data)
   return (
     <div>
-      <p onClick={() => pruebas()}>Vamos Racing: TypeScript</p>
-      <button onClick={() => setPrueba(!prueba)}>Mostrar/Ocultas</button>
+      <p
+        onClick={() => {
+          console.log(data)
+        }}
+      >
+        Vamos Racing: TypeScript
+      </p>
+      <button
+        onClick={() => {
+          clean()
+        }}
+      >
+        Mostrar/Ocultas
+      </button>
       {isLoading && <p>Cargando</p>}
       {prueba && !isLoading && <Otro />}
     </div>

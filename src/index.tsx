@@ -141,6 +141,7 @@ interface FetchProps {
   isFormData?: boolean
   forceSync?: boolean
   urlParams?: string[]
+  noHeaders?: boolean
 }
 
 interface ResponseProps {
@@ -210,10 +211,8 @@ export const makeRequest = async ({
     }, new FormData())
   }
 
-  console.log({ finalHeaders })
   const finalUrl =
     urlParams !== undefined ? url + '/' + urlParams?.join('/') : url
-  // console.log(finalUrl)
   const respuesta = await axios({
     timeout,
     timeoutErrorMessage: 'Timeout',
@@ -254,7 +253,8 @@ export const useFetch = <T extends string>(key: T): Fetch & State => {
         data: remoteData,
         isFormData,
         forceSync,
-        urlParams
+        urlParams,
+        noHeaders
       } = props
       if (actual.isLoading) return null
       lastFetch.current = props
@@ -272,7 +272,7 @@ export const useFetch = <T extends string>(key: T): Fetch & State => {
           defaultParams,
           timeout,
           urlParams,
-          headers
+          headers: noHeaders ? undefined : headers
         })
 
         if (forceSync !== true) dispatch({ type: 'request', key, results })
