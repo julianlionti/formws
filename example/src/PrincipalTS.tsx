@@ -1,34 +1,28 @@
-import React from 'react'
-import { useFetch, updateUser, getUser } from 'formws'
+import React, { memo } from 'react'
+import { useFetch } from 'formws'
 import urls from './urls'
 
 type Keys = keyof typeof urls
 
-export default () => {
-  const setUser = updateUser()
-  const user = getUser()
-  const { call, isLoading, data, error } = useFetch<Keys>('espe')
-  console.log(data, error, user)
+const Prueba = memo((props: { index: number }) => {
+  const { call } = useFetch<Keys>('espe', props.index)
+  return (
+    <p
+      onClick={() => {
+        call({ method: 'POST' })
+      }}
+    >
+      Setear usuario {props.index}
+    </p>
+  )
+})
 
+export default () => {
   return (
     <div>
-      <p onClick={() => setUser({ uid: 'HEDZDko7smbIfI3KnQR2VR5gsCw2' })}>
-        Setear usuario
-      </p>
-      <button
-        onClick={() => {
-          call({
-            method: 'POST',
-            query: {
-              items: {},
-              direccion: {}
-            }
-          })
-        }}
-      >
-        Llamar
-      </button>
-      {isLoading && <p>Cargando</p>}
+      {[0, 1, 2].map((e) => {
+        return <Prueba key={e} index={e} />
+      })}
     </div>
   )
 }

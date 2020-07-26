@@ -45,6 +45,7 @@ type Action = {
   results?: any
   error?: ErrorProps
   data?: {} | []
+  id?: string | number
 }
 
 interface ContextState {
@@ -68,12 +69,13 @@ const defValues: State = {
 }
 
 const reducer = (state: InitialState, action: Action): InitialState => {
-  const { key, data } = action
+  const { key, data, id } = action
+  const keypiola = `${key}${id !== undefined ? '-' + id : ''}`
   switch (action.type) {
     case 'clean': {
       return {
         ...state,
-        [key]: {
+        [keypiola]: {
           ...defValues,
           url: state[key].url
         }
@@ -83,11 +85,12 @@ const reducer = (state: InitialState, action: Action): InitialState => {
       const isLoading = !(action.error || action.results)
       return {
         ...state,
-        [key]: {
-          ...state[key],
+        [keypiola]: {
+          ...state[keypiola],
           isLoading,
-          data: isLoading && data ? data : action.results || state[key]?.data,
-          error: isLoading ? undefined : action.error || state[key].error
+          data:
+            isLoading && data ? data : action.results || state[keypiola]?.data,
+          error: isLoading ? undefined : action.error || state[keypiola].error
         }
       }
     }
@@ -232,8 +235,11 @@ export const makeRequest = async ({
   return results
 }
 
-export const useFetch = <T extends string>(key: T): Fetch & State => {
-  const { current: hookId } = useRef(Math.random())
+export const useFetch = <T extends string>(
+  key: T,
+  id?: string | number
+): Fetch & State => {
+  const hookId = useRef(Math.random()).current
   const lastFetch = useRef<any>()
   const {
     state,
@@ -243,7 +249,9 @@ export const useFetch = <T extends string>(key: T): Fetch & State => {
     timeout = 15000
   } = useContext(WsContext)
   const prevHeaders = usePrevious(headers)
-  const actual = state[key]
+
+  const keypiola = `${key}${id !== undefined ? '-' + id : ''}`
+  const actual = state[keypiola] || state[key]
 
   const call = useCallback(
     async (props: FetchProps): Promise<ResponseProps | null> => {
@@ -261,7 +269,7 @@ export const useFetch = <T extends string>(key: T): Fetch & State => {
       lastFetch.current = props
 
       if (forceSync !== true)
-        dispatch({ type: 'request', key, data: remoteData })
+        dispatch({ type: 'request', key, data: remoteData, id })
 
       try {
         const results = await makeRequest({
@@ -276,7 +284,7 @@ export const useFetch = <T extends string>(key: T): Fetch & State => {
           headers: noHeaders ? undefined : headers
         })
 
-        if (forceSync !== true) dispatch({ type: 'request', key, results })
+        if (forceSync !== true) dispatch({ type: 'request', key, results, id })
 
         return { key, results }
       } catch (ex) {
@@ -288,7 +296,7 @@ export const useFetch = <T extends string>(key: T): Fetch & State => {
           code: isTimeOut ? 999 : status || 500
         }
 
-        if (forceSync !== true) dispatch({ type: 'request', key, error })
+        if (forceSync !== true) dispatch({ type: 'request', key, error, id })
 
         return { key, error }
       }
@@ -297,7 +305,7 @@ export const useFetch = <T extends string>(key: T): Fetch & State => {
   )
 
   const clean = useCallback(() => {
-    dispatch({ type: 'clean', key })
+    dispatch({ type: 'clean', key, id })
   }, [])
 
   const refresh = useCallback(() => {
