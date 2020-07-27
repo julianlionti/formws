@@ -1,6 +1,6 @@
 {
   "name": "formws",
-  "version": "0.9.446",
+  "version": "0.9.447",
   "description": "Made with create-react-library",
   "author": "Julián Lionti",
   "license": "MIT",
@@ -60,5 +60,8 @@
   },
   "files": [
     "dist"
-  ]
+  ],
+  "dependencies": {
+    "axios": "^0.19.2"
+  }
 }
