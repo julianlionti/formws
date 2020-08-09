@@ -5,13 +5,14 @@ import React, {
   useCallback,
   createContext,
   useEffect,
-  useState
+  useState,
+  ReactNode
 } from 'react'
 import axios, { Method } from 'axios'
 import usePrevious from './usePrevious'
 
 interface WSProps {
-  children: React.Component<any, any>
+  children: ReactNode
   intial?: any
   urls: {
     [url: string]: string
@@ -24,7 +25,9 @@ interface WSProps {
 }
 
 interface ErrorProps {
-  message: string
+  message:
+    | string
+    | { error?: string; errores?: { mensaje: string; codigo: number }[] }
   code: number
 }
 
@@ -90,7 +93,8 @@ const reducer = (state: InitialState, action: Action): InitialState => {
           isLoading,
           data:
             isLoading && data ? data : action.results || state[keypiola]?.data,
-          error: isLoading ? undefined : action.error || state[keypiola].error
+          error: isLoading ? undefined : action.error || state[keypiola].error,
+          url: state[key].url
         }
       }
     }
@@ -137,26 +141,26 @@ export const WSProvider = ({
   )
 }
 
-interface FetchProps {
+interface FetchProps<K> {
   method?: Method // 'POST' | 'GET'
   query?: {}
   transformData?: (data: any) => any
-  data?: {} | []
+  data?: K
   isFormData?: boolean
   forceSync?: boolean
   urlParams?: string[]
   noHeaders?: boolean
 }
 
-interface ResponseProps {
+interface ResponseProps<K> {
   error?: ErrorProps
-  results?: any
+  results?: K
   key: keyof InitialState
 }
 
-type Fetch = {
+type Fetch<K> = {
   hookId: number
-  call: (props: FetchProps) => Promise<ResponseProps | null>
+  call: (props: FetchProps<K>) => Promise<ResponseProps<K> | null>
   clean: () => void
   refresh: () => void
 }
@@ -210,7 +214,14 @@ export const makeRequest = async ({
   let formData: any = null
   if (isFormData) {
     formData = Object.keys(finalParams).reduce((acc, cur) => {
-      acc.append(cur, finalParams[cur])
+      const valores = finalParams[cur]
+      if (Array.isArray(valores)) {
+        valores.forEach((val, i) => {
+          acc.append(`${cur}[${i}]`, val)
+        })
+      } else {
+        acc.append(cur, valores)
+      }
       return acc
     }, new FormData())
   }
@@ -223,7 +234,7 @@ export const makeRequest = async ({
     url: finalUrl,
     method, // : method === 'GET' ? 'GET' : 'POST',
     params: method === 'GET' ? formData || finalParams : undefined,
-    data: method === 'POST' ? formData || finalParams : undefined,
+    data: method !== 'GET' ? formData || finalParams : undefined,
     headers: finalHeaders
   })
 
@@ -235,10 +246,10 @@ export const makeRequest = async ({
   return results
 }
 
-export const useFetch = <T extends string>(
+export const useFetch = <T extends string, K = {} | []>(
   key: T,
   id?: string | number
-): Fetch & State => {
+): Fetch<K> & State => {
   const hookId = useRef(Math.random()).current
   const lastFetch = useRef<any>()
   const {
@@ -254,7 +265,7 @@ export const useFetch = <T extends string>(
   const actual = state[keypiola] || state[key]
 
   const call = useCallback(
-    async (props: FetchProps): Promise<ResponseProps | null> => {
+    async (props: FetchProps<K>): Promise<ResponseProps<K> | null> => {
       const {
         method = 'GET',
         query,
